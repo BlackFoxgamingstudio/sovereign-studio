@@ -8,10 +8,14 @@ struct EmbeddedWebView: NSViewRepresentable {
     func makeNSView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.setValue(true, forKey: "allowUniversalAccessFromFileURLs")
+        config.websiteDataStore = WKWebsiteDataStore.default()
+        config.defaultWebpagePreferences.allowsContentJavaScript = true
+        config.preferences.javaScriptCanOpenWindowsAutomatically = true
         
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
         webView.setValue(false, forKey: "drawsBackground")
+        webView.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 SovereignStudio/1.0"
         webView.navigationDelegate = context.coordinator
         
         let request = URLRequest(url: url)

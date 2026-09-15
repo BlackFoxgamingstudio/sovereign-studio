@@ -11,116 +11,144 @@ struct RepoImporterView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Image(systemName: "arrow.down.circle.fill")
-                    .foregroundColor(.blue)
-                Text("GitHub Repo Importer & Platform Extender")
-                    .font(.headline)
-                    .foregroundColor(.white)
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.down.circle.fill")
+                        .foregroundColor(.sbbElectricBlue)
+                    Text("GitHub Repo Importer & Platform Extender")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(.white)
+                }
                 Spacer()
-                Text("Registered Solutions: " + String(importedCount))
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundColor(.green)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.green.opacity(0.15))
-                    .cornerRadius(4)
+                Text("REGISTERED SOLUTIONS: " + String(importedCount))
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundColor(.sbbActiveGreen)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Color.sbbSurfaceElevated)
+                    .cornerRadius(3)
+                    .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.sbbBorder, lineWidth: 1))
             }
-            .padding(12)
-            .background(Color(nsColor: .windowBackgroundColor).opacity(0.9))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color.sbbSurface)
+            .overlay(Rectangle().frame(height: 1).foregroundColor(Color.sbbBorder), alignment: .bottom)
             
-            Divider()
-            
-            VStack(alignment: .leading, spacing: 16) {
-                // Input controls
-                HStack(spacing: 12) {
-                    TextField("GitHub Org / Username", text: $username)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 260)
-                    
-                    Button(action: fetchRepos) {
-                        HStack(spacing: 6) {
-                            if isLoading {
-                                ProgressView().controlSize(.small)
-                            } else {
-                                Image(systemName: "magnifyingglass")
-                            }
-                            Text("Fetch Repositories")
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    // Input controls card
+                    HStack(spacing: 12) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "person.circle")
+                                .foregroundColor(.sbbTextSecondary)
+                            TextField("GitHub Org / Username", text: $username)
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 12, design: .monospaced))
+                                .foregroundColor(.white)
                         }
                         .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(isLoading)
-                    
-                    Spacer()
-                }
-                
-                // Status Log Banner
-                HStack {
-                    Image(systemName: "terminal.fill")
-                        .foregroundColor(.yellow)
-                    Text(importStatus)
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundColor(.white)
-                    Spacer()
-                }
-                .padding(10)
-                .background(Color.black.opacity(0.5))
-                .cornerRadius(6)
-                
-                // Repositories List
-                Text("AVAILABLE REPOSITORIES IN @" + username.uppercased() + ":")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundColor(.gray)
-                
-                List(repos) { repo in
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text(repo.name)
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.cyan)
-                                if let lang = repo.language {
-                                    Text(lang)
-                                        .font(.system(size: 10, design: .monospaced))
-                                        .foregroundColor(.gray)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(Color.gray.opacity(0.2))
-                                        .cornerRadius(4)
+                        .padding(.vertical, 8)
+                        .background(Color.sbbSurfaceElevated)
+                        .cornerRadius(3)
+                        .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.sbbBorder, lineWidth: 1))
+                        .frame(width: 280)
+                        
+                        Button(action: fetchRepos) {
+                            HStack(spacing: 6) {
+                                if isLoading {
+                                    ProgressView().controlSize(.small)
+                                } else {
+                                    Image(systemName: "magnifyingglass")
                                 }
+                                Text("Fetch Repositories")
                             }
-                            if let desc = repo.description {
-                                Text(desc)
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        
-                        Spacer()
-                        
-                        Button(action: {
-                            importRepo(repo)
-                        }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "plus.square.fill")
-                                Text("Import & Automate")
-                            }
-                            .font(.system(size: 11, weight: .medium))
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(Color.blue)
+                            .font(.system(size: 11, weight: .bold))
                             .foregroundColor(.white)
-                            .cornerRadius(6)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(Color.sbbElectricBlue)
+                            .cornerRadius(3)
                         }
                         .buttonStyle(.plain)
+                        .disabled(isLoading)
+                        
+                        Spacer()
                     }
-                    .padding(.vertical, 6)
+                    
+                    // Status Log Banner
+                    HStack(spacing: 10) {
+                        Image(systemName: "terminal.fill")
+                            .foregroundColor(.sbbWarningAmber)
+                        Text(importStatus)
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundColor(.sbbTextPrimary)
+                        Spacer()
+                    }
+                    .padding(10)
+                    .background(Color.sbbSurfaceElevated)
+                    .cornerRadius(3)
+                    .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.sbbBorder, lineWidth: 1))
+                    
+                    // Repositories List
+                    Text("AVAILABLE REPOSITORIES IN @" + username.uppercased() + ":")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundColor(.sbbTextSecondary)
+                    
+                    VStack(spacing: 8) {
+                        ForEach(repos) { repo in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack(spacing: 8) {
+                                        Text(repo.name)
+                                            .font(.system(size: 13, weight: .semibold))
+                                            .foregroundColor(.sbbNeonCyan)
+                                        if let lang = repo.language {
+                                            Text(lang)
+                                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                                .foregroundColor(.sbbNeonMagenta)
+                                                .padding(.horizontal, 6)
+                                                .padding(.vertical, 2)
+                                                .background(Color.sbbNeonMagenta.opacity(0.12))
+                                                .cornerRadius(2)
+                                                .overlay(RoundedRectangle(cornerRadius: 2).stroke(Color.sbbNeonMagenta.opacity(0.4), lineWidth: 1))
+                                        }
+                                    }
+                                    if let desc = repo.description {
+                                        Text(desc)
+                                            .font(.system(size: 11))
+                                            .foregroundColor(.sbbTextSecondary)
+                                    }
+                                }
+                                
+                                Spacer()
+                                
+                                Button(action: {
+                                    importRepo(repo)
+                                }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "plus.square.fill")
+                                        Text("Import & Automate")
+                                    }
+                                    .font(.system(size: 10, weight: .bold))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(Color.sbbElectricBlue)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(3)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(12)
+                            .background(Color.sbbSurface)
+                            .cornerRadius(3)
+                            .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.sbbBorder, lineWidth: 1))
+                        }
+                    }
                 }
-                .listStyle(.inset)
+                .padding(16)
             }
-            .padding(20)
+            .background(Color.sbbBackground)
         }
+        .background(Color.sbbBackground)
         .onAppear {
             fetchRepos()
         }

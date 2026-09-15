@@ -1,10 +1,14 @@
 import SwiftUI
+import AppKit
 
 struct TVControlRoomView: View {
     @State private var selectedCamera = "CAM_01"
-    @State private var tickerTheme = "#FF3B30"
+    @State private var tickerTheme = "#FF3366"
     @State private var activePreset = "16:9 UHD (Presentation PiP)"
     @State private var isLiveOnAir = true
+    @State private var useLiveStageView = true
+    @State private var reloadStage = false
+    @State private var currentProjectId = "proj-yt-ep01-599-mainframe"
     @State private var crawlText = "BREAKING: Sovereign Biz Box replaces commercial SaaS with zero cloud egress fees  ★  MARKETS: Privacy-First AI Automation up 34%  ★  ALL PIPELINES HEALTHY"
     
     let cameraAngles = [
@@ -14,156 +18,234 @@ struct TVControlRoomView: View {
         ("CAM_04", "PiP Slide View", "pip.fill")
     ]
     
+    var stageURL: URL {
+        URL(string: "http://127.0.0.1:8812/stage?project_id=\(currentProjectId)")!
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             // Top Bar
-            HStack {
+            HStack(spacing: 12) {
                 HStack(spacing: 8) {
-                    Circle()
-                        .fill(isLiveOnAir ? Color.red : Color.gray)
-                        .frame(width: 10, height: 10)
+                    LivePulseDot(color: isLiveOnAir ? .sbbCrimsonLive : .sbbTextMuted, size: 7)
                     Text(isLiveOnAir ? "LIVE ON AIR" : "STANDBY")
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundColor(isLiveOnAir ? .red : .gray)
+                        .font(.system(size: 11, weight: .black, design: .monospaced))
+                        .foregroundColor(isLiveOnAir ? .sbbCrimsonLive : .sbbTextMuted)
                 }
                 .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .background(Color.red.opacity(0.15))
-                .cornerRadius(6)
+                .padding(.vertical, 5)
+                .background(Color.sbbSurfaceElevated)
+                .cornerRadius(3)
+                .overlay(RoundedRectangle(cornerRadius: 3).stroke(isLiveOnAir ? Color.sbbCrimsonLive.opacity(0.5) : Color.sbbBorder, lineWidth: 1))
                 
                 Text("TV Broadcast Control Room — Port 8812")
-                    .font(.headline)
+                    .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.white)
                 
                 Spacer()
                 
-                Text("Stage: " + activePreset)
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
-                    .foregroundColor(.cyan)
+                // View Mode Toggle
+                HStack(spacing: 4) {
+                    Button(action: {
+                        useLiveStageView = true
+                    }) {
+                        Text("16:9 MASTER STAGE")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundColor(useLiveStageView ? .white : .sbbTextMuted)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(useLiveStageView ? Color.sbbElectricBlue : Color.clear)
+                            .cornerRadius(2)
+                    }
+                    .buttonStyle(.plain)
+                    
+                    Button(action: {
+                        useLiveStageView = false
+                    }) {
+                        Text("STUDIO CAMS")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundColor(!useLiveStageView ? .white : .sbbTextMuted)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(!useLiveStageView ? Color.sbbElectricBlue : Color.clear)
+                            .cornerRadius(2)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(2)
+                .background(Color.sbbSurfaceElevated)
+                .cornerRadius(3)
+                .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.sbbBorder, lineWidth: 1))
+                
+                // Reload stage button
+                Button(action: {
+                    reloadStage = true
+                }) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.sbbNeonCyan)
+                        .padding(5)
+                        .background(Color.sbbSurfaceElevated)
+                        .cornerRadius(3)
+                        .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.sbbBorder, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .help("Refresh Broadcast Feed")
+                
+                // Open external stage
+                Button(action: {
+                    NSWorkspace.shared.open(stageURL)
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.up.right.square")
+                        Text("OPEN STAGE")
+                    }
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundColor(.sbbNeonCyan)
                     .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.cyan.opacity(0.12))
-                    .cornerRadius(4)
+                    .padding(.vertical, 5)
+                    .background(Color.sbbSurfaceElevated)
+                    .cornerRadius(3)
+                    .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.sbbBorder, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
             }
-            .padding(12)
-            .background(Color(nsColor: .windowBackgroundColor).opacity(0.9))
-            
-            Divider()
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color.sbbSurface)
+            .overlay(Rectangle().frame(height: 1).foregroundColor(Color.sbbBorder), alignment: .bottom)
             
             // 16:9 Main Stage Monitor
             GeometryReader { geo in
                 ZStack(alignment: .bottom) {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(red: 0.07, green: 0.09, blue: 0.14))
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Color.sbbSurface)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.blue.opacity(0.4), lineWidth: 2)
+                            RoundedRectangle(cornerRadius: 3)
+                                .stroke(Color.sbbBorder, lineWidth: 1)
                         )
                     
-                    VStack(spacing: 16) {
-                        HStack {
-                            Text("SOVEREIGN NEWS NETWORK (SNN) — UHD 4K MASTER FEED")
-                                .font(.system(size: 13, weight: .bold, design: .monospaced))
-                                .foregroundColor(.cyan)
-                            Spacer()
-                            Text("ACTIVE: " + selectedCamera)
-                                .font(.system(size: 12, weight: .bold, design: .monospaced))
-                                .foregroundColor(.yellow)
-                        }
-                        .padding(.horizontal, 24)
-                        .padding(.top, 20)
-                        
-                        // Visual Canvas Simulation
-                        HStack(spacing: 20) {
-                            // Anchor Box
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color(red: 0.12, green: 0.15, blue: 0.22))
-                                VStack(spacing: 8) {
-                                    Image(systemName: "person.crop.rectangle.fill")
-                                        .font(.system(size: 48))
-                                        .foregroundColor(.blue)
-                                    Text("SOVEREIGN AI ANCHOR")
-                                        .font(.system(size: 12, weight: .bold))
+                    if useLiveStageView {
+                        // Live HTML5 Web Audio / Video Stage Player directly embedded
+                        EmbeddedWebView(url: stageURL, reloadTrigger: $reloadStage)
+                            .cornerRadius(2)
+                    } else {
+                        // Multi-Camera Simulation Layout
+                        VStack(spacing: 16) {
+                            HStack {
+                                Text("SOVEREIGN NEWS NETWORK (SNN) — UHD 4K MASTER FEED")
+                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                    .foregroundColor(.sbbNeonCyan)
+                                Spacer()
+                                HStack(spacing: 6) {
+                                    LivePulseDot(color: .sbbNeonMagenta, size: 5)
+                                    Text("ACTIVE: " + selectedCamera)
+                                        .font(.system(size: 10, weight: .bold, design: .monospaced))
                                         .foregroundColor(.white)
-                                    Text("Emotion: Confident | Cadence: 140 WPM")
-                                        .font(.system(size: 10, design: .monospaced))
-                                        .foregroundColor(.gray)
                                 }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.sbbSurfaceElevated)
+                                .cornerRadius(2)
+                                .overlay(RoundedRectangle(cornerRadius: 2).stroke(Color.sbbBorder, lineWidth: 1))
                             }
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 16)
                             
-                            // Data Slide PiP
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color(red: 0.10, green: 0.13, blue: 0.18))
-                                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.cyan.opacity(0.3), lineWidth: 1))
-                                VStack(alignment: .leading, spacing: 10) {
-                                    Text("Episode 1: The $599 Business Mainframe")
-                                        .font(.system(size: 13, weight: .bold))
-                                        .foregroundColor(.cyan)
-                                    Text("• 33 Microservices on Local Bare-Metal\n• Zero Cloud Egress Fees\n• Apple Silicon Hardware Acceleration\n• n8n Autonomous Pipelines Active")
-                                        .font(.system(size: 11, design: .monospaced))
-                                        .foregroundColor(.white.opacity(0.9))
-                                    Spacer()
-                                    HStack {
-                                        Text("Uptime: 99.99%")
+                            HStack(spacing: 16) {
+                                // Anchor Box
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .fill(Color.sbbSurfaceElevated)
+                                        .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.sbbBorder, lineWidth: 1))
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "person.crop.rectangle.fill")
+                                            .font(.system(size: 44))
+                                            .foregroundColor(.sbbElectricBlue)
+                                        Text("SOVEREIGN AI ANCHOR")
+                                            .font(.system(size: 12, weight: .bold))
+                                            .foregroundColor(.white)
+                                        Text("Emotion: Confident | Cadence: 140 WPM")
                                             .font(.system(size: 10, design: .monospaced))
-                                            .foregroundColor(.green)
-                                        Spacer()
-                                        Text("Port: 8812")
-                                            .font(.system(size: 10, design: .monospaced))
-                                            .foregroundColor(.gray)
+                                            .foregroundColor(.sbbTextSecondary)
                                     }
                                 }
-                                .padding(16)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                
+                                // Data Slide PiP
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .fill(Color.sbbSurfaceElevated)
+                                        .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.sbbNeonCyan.opacity(0.4), lineWidth: 1))
+                                    VStack(alignment: .leading, spacing: 10) {
+                                        Text("Episode 1: The $599 Business Mainframe")
+                                            .font(.system(size: 12, weight: .bold))
+                                            .foregroundColor(.sbbNeonCyan)
+                                        Text("• 33 Microservices on Local Bare-Metal\n• Zero Cloud Egress Fees\n• Apple Silicon Hardware Acceleration\n• n8n Autonomous Pipelines Active")
+                                            .font(.system(size: 10, design: .monospaced))
+                                            .foregroundColor(.sbbTextPrimary)
+                                        Spacer()
+                                        HStack {
+                                            Text("Uptime: 99.99%")
+                                                .font(.system(size: 9, design: .monospaced))
+                                                .foregroundColor(.sbbActiveGreen)
+                                            Spacer()
+                                            Text("Port: 8812")
+                                                .font(.system(size: 9, design: .monospaced))
+                                                .foregroundColor(.sbbTextSecondary)
+                                        }
+                                    }
+                                    .padding(14)
+                                }
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
                             }
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        }
-                        .padding(.horizontal, 24)
-                        
-                        Spacer()
-                    }
-                    
-                    // SNN Lower-Third Dynamic Ticker Overlay
-                    VStack(spacing: 0) {
-                        HStack(spacing: 12) {
-                            Text("BREAKING")
-                                .font(.system(size: 12, weight: .black, design: .monospaced))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(Color.red)
-                                .cornerRadius(4)
-                            
-                            Text(crawlText)
-                                .font(.system(size: 12, weight: .medium, design: .monospaced))
-                                .foregroundColor(.white)
-                                .lineLimit(1)
+                            .padding(.horizontal, 20)
                             
                             Spacer()
-                            
-                            Text("NET EGRESS: $0.00")
-                                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                .foregroundColor(.green)
-                                .padding(.trailing, 8)
                         }
-                        .padding(10)
-                        .background(Color.black.opacity(0.85))
-                        .cornerRadius(8)
+                        
+                        // SNN Lower-Third Dynamic Ticker Overlay
+                        VStack(spacing: 0) {
+                            HStack(spacing: 10) {
+                                Text("BREAKING")
+                                    .font(.system(size: 10, weight: .black, design: .monospaced))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.sbbCrimsonLive)
+                                    .cornerRadius(2)
+                                
+                                Text(crawlText)
+                                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                    .foregroundColor(.white)
+                                    .lineLimit(1)
+                                
+                                Spacer()
+                                
+                                Text("NET EGRESS: $0.00")
+                                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                    .foregroundColor(.sbbActiveGreen)
+                                    .padding(.trailing, 8)
+                            }
+                            .padding(8)
+                            .background(Color.sbbBackground.opacity(0.95))
+                            .cornerRadius(3)
+                            .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.sbbBorder, lineWidth: 1))
+                        }
+                        .padding(16)
                     }
-                    .padding(16)
                 }
                 .aspectRatio(16.0 / 9.0, contentMode: .fit)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(16)
             }
+            .background(Color.sbbBackground)
             
-            // Camera Switcher
-            HStack(spacing: 12) {
+            // Control Bar & Actions
+            HStack(spacing: 10) {
                 Text("CAMERAS:")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundColor(.gray)
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundColor(.sbbTextMuted)
                 
                 ForEach(cameraAngles, id: \.0) { cam in
                     Button(action: {
@@ -171,14 +253,19 @@ struct TVControlRoomView: View {
                     }) {
                         HStack(spacing: 6) {
                             Image(systemName: cam.2)
+                                .font(.system(size: 11))
                             Text(cam.0 + ": " + cam.1)
-                                .font(.system(size: 11, weight: .medium))
+                                .font(.system(size: 11, weight: selectedCamera == cam.0 ? .bold : .medium))
                         }
                         .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(selectedCamera == cam.0 ? Color.blue : Color(nsColor: .controlBackgroundColor))
-                        .foregroundColor(selectedCamera == cam.0 ? .white : .primary)
-                        .cornerRadius(6)
+                        .padding(.vertical, 7)
+                        .background(selectedCamera == cam.0 ? Color.sbbElectricBlue : Color.sbbSurfaceElevated)
+                        .foregroundColor(selectedCamera == cam.0 ? .white : .sbbTextSecondary)
+                        .cornerRadius(3)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 3)
+                                .stroke(selectedCamera == cam.0 ? Color.sbbElectricBlue : Color.sbbBorder, lineWidth: 1)
+                        )
                     }
                     .buttonStyle(.plain)
                 }
@@ -186,24 +273,55 @@ struct TVControlRoomView: View {
                 Spacer()
                 
                 Button(action: {
+                    deployStoryboardToTV()
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "tv.fill")
+                        Text("Deploy Show to Stage")
+                    }
+                    .font(.system(size: 11, weight: .bold))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(Color.sbbElectricBlue)
+                    .foregroundColor(.white)
+                    .cornerRadius(3)
+                }
+                .buttonStyle(.plain)
+                
+                Button(action: {
                     triggerSimulcast()
                 }) {
                     HStack(spacing: 6) {
                         Image(systemName: "antenna.radiowaves.left.and.right")
-                        Text("Trigger TV Broadcast")
+                        Text("Live Simulcast")
                     }
-                    .font(.system(size: 12, weight: .semibold))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(Color.red)
+                    .font(.system(size: 11, weight: .bold))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(Color.sbbCrimsonLive)
                     .foregroundColor(.white)
-                    .cornerRadius(6)
+                    .cornerRadius(3)
                 }
                 .buttonStyle(.plain)
             }
-            .padding(16)
-            .background(Color(nsColor: .windowBackgroundColor).opacity(0.8))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color.sbbSurface)
+            .overlay(Rectangle().frame(height: 1).foregroundColor(Color.sbbBorder), alignment: .top)
         }
+        .background(Color.sbbBackground)
+    }
+    
+    private func deployStoryboardToTV() {
+        guard let url = URL(string: "http://127.0.0.1:8815/api/projects/\(currentProjectId)/deploy-to-tv") else { return }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        URLSession.shared.dataTask(with: request) { _, _, _ in
+            DispatchQueue.main.async {
+                self.reloadStage = true
+            }
+        }.resume()
     }
     
     private func triggerSimulcast() {
@@ -217,6 +335,10 @@ struct TVControlRoomView: View {
             "payload": ["topic": "Sovereign Studio Desktop Switcher", "content": "Live camera switched to " + selectedCamera]
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
-        URLSession.shared.dataTask(with: request).resume()
+        URLSession.shared.dataTask(with: request) { _, _, _ in
+            DispatchQueue.main.async {
+                self.reloadStage = true
+            }
+        }.resume()
     }
 }

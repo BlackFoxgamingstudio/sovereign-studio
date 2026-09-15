@@ -21,132 +21,140 @@ struct AIRadioDeskView: View {
             // Header
             HStack {
                 HStack(spacing: 8) {
-                    Image(systemName: "radio.fill")
-                        .foregroundColor(.green)
+                    LivePulseDot(color: .sbbActiveGreen, size: 7)
                     Text("W-SBB Radio 104.2 FM — Autonomous Playout Mixer")
-                        .font(.headline)
+                        .font(.system(size: 13, weight: .bold))
                         .foregroundColor(.white)
                 }
                 Spacer()
-                Text("Port: 8811 | DSP Ducking: -14dB")
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundColor(.green)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.green.opacity(0.12))
-                    .cornerRadius(4)
+                Text("PORT: 8811  |  DSP DUCKING: -14dB  |  AAC 320kbps")
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundColor(.sbbActiveGreen)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Color.sbbSurfaceElevated)
+                    .cornerRadius(3)
+                    .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.sbbBorder, lineWidth: 1))
             }
-            .padding(12)
-            .background(Color(nsColor: .windowBackgroundColor).opacity(0.9))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color.sbbSurface)
+            .overlay(Rectangle().frame(height: 1).foregroundColor(Color.sbbBorder), alignment: .bottom)
             
-            Divider()
-            
-            HStack(spacing: 24) {
+            HStack(spacing: 16) {
                 // Left: Radar Visualizer
-                VStack(spacing: 20) {
+                VStack(spacing: 16) {
                     ZStack {
                         Circle()
-                            .stroke(Color.purple.opacity(0.2), lineWidth: 2)
-                            .frame(width: 200, height: 200)
+                            .stroke(Color.sbbNeonMagenta.opacity(0.2), lineWidth: 2)
+                            .frame(width: 190, height: 190)
                         
                         Circle()
-                            .stroke(Color.purple.opacity(radarPulse ? 0.8 : 0.3), lineWidth: 2)
+                            .stroke(Color.sbbNeonMagenta.opacity(radarPulse ? 0.8 : 0.3), lineWidth: 2)
                             .frame(width: radarPulse ? 160 : 110, height: radarPulse ? 160 : 110)
                             .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: radarPulse)
                         
                         Circle()
-                            .fill(Color(red: 0.15, green: 0.10, blue: 0.25))
-                            .frame(width: 90, height: 90)
+                            .fill(Color.sbbSurfaceElevated)
+                            .frame(width: 85, height: 85)
+                            .overlay(Circle().stroke(Color.sbbNeonMagenta.opacity(0.6), lineWidth: 1))
                         
                         VStack(spacing: 4) {
                             Image(systemName: "waveform")
-                                .font(.system(size: 24))
-                                .foregroundColor(.purple)
+                                .font(.system(size: 22))
+                                .foregroundColor(.sbbNeonMagenta)
                             Text("104.2 FM")
-                                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
                                 .foregroundColor(.white)
                         }
                     }
-                    .frame(height: 220)
+                    .frame(height: 200)
                     .onAppear {
                         radarPulse = true
                     }
                     
-                    VStack(spacing: 4) {
+                    VStack(spacing: 3) {
                         Text(currentShow)
-                            .font(.system(size: 15, weight: .bold))
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundColor(.white)
                         Text("Host: " + currentDJ + " | Genre: " + currentGenre)
-                            .font(.system(size: 11, design: .monospaced))
-                            .foregroundColor(.purple)
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundColor(.sbbNeonCyan)
                     }
                     
                     // DSP Voice Ducking Telemetry
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Text("DSP VOICE DUCKING:")
-                                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                .foregroundColor(.gray)
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .foregroundColor(.sbbTextSecondary)
                             Spacer()
                             Text(String(format: "%.1f dB", duckingGainDb))
-                                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                .foregroundColor(.yellow)
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .foregroundColor(.sbbWarningAmber)
                         }
                         
                         GeometryReader { g in
                             ZStack(alignment: .leading) {
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(Color.gray.opacity(0.2))
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(LinearGradient(colors: [.yellow, .red], startPoint: .leading, endPoint: .trailing))
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(Color.sbbSurfaceElevated)
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(LinearGradient(colors: [.sbbNeonCyan, .sbbNeonMagenta], startPoint: .leading, endPoint: .trailing))
                                     .frame(width: g.size.width * 0.72)
                             }
                         }
-                        .frame(height: 8)
+                        .frame(height: 6)
                         
-                        Text("Attack: 250ms | Release: 600ms | Codec: AAC 320kbps")
-                            .font(.system(size: 10, design: .monospaced))
-                            .foregroundColor(.gray)
+                        Text("Attack: 250ms | Release: 600ms | Hardware Bare-Metal DSP")
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundColor(.sbbTextMuted)
                     }
-                    .padding(14)
-                    .background(Color(red: 0.10, green: 0.10, blue: 0.15))
-                    .cornerRadius(8)
+                    .padding(12)
+                    .background(Color.sbbSurfaceElevated)
+                    .cornerRadius(3)
+                    .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.sbbBorder, lineWidth: 1))
                     
                     Spacer()
                 }
-                .frame(width: 300)
+                .frame(width: 290)
+                .proCard(bg: .sbbSurface, border: .sbbBorder, radius: 3.0, padding: 16.0)
                 
                 // Right: Dayparts & Live Timeline
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 14) {
                     Text("24-HOUR BROADCAST DAYPART SCHEDULE")
-                        .font(.system(size: 13, weight: .bold, design: .monospaced))
-                        .foregroundColor(.cyan)
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundColor(.sbbNeonCyan)
                     
-                    VStack(spacing: 8) {
+                    VStack(spacing: 6) {
                         ForEach(dayparts, id: \.0) { dp in
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(dp.1)
-                                        .font(.system(size: 13, weight: .semibold))
-                                        .foregroundColor(selectedDaypart == dp.0 ? .white : .primary)
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(selectedDaypart == dp.0 ? .white : .sbbTextSecondary)
                                     Text("Style: " + dp.2)
-                                        .font(.system(size: 11, design: .monospaced))
-                                        .foregroundColor(.gray)
+                                        .font(.system(size: 10, design: .monospaced))
+                                        .foregroundColor(.sbbTextMuted)
                                 }
                                 Spacer()
                                 if selectedDaypart == dp.0 {
                                     Text("ON AIR")
-                                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                        .foregroundColor(.green)
+                                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                        .foregroundColor(.sbbActiveGreen)
                                         .padding(.horizontal, 8)
                                         .padding(.vertical, 3)
-                                        .background(Color.green.opacity(0.2))
-                                        .cornerRadius(4)
+                                        .background(Color.sbbActiveGreen.opacity(0.15))
+                                        .cornerRadius(2)
+                                        .overlay(RoundedRectangle(cornerRadius: 2).stroke(Color.sbbActiveGreen.opacity(0.4), lineWidth: 1))
                                 }
                             }
                             .padding(10)
-                            .background(selectedDaypart == dp.0 ? Color.purple.opacity(0.3) : Color(nsColor: .controlBackgroundColor))
-                            .cornerRadius(8)
+                            .background(selectedDaypart == dp.0 ? Color.sbbSurfaceElevated : Color.sbbSurfaceElevated.opacity(0.4))
+                            .cornerRadius(3)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 3)
+                                    .stroke(selectedDaypart == dp.0 ? Color.sbbNeonMagenta : Color.sbbBorder, lineWidth: 1)
+                            )
                             .onTapGesture {
                                 selectedDaypart = dp.0
                                 currentGenre = dp.2
@@ -155,13 +163,13 @@ struct AIRadioDeskView: View {
                     }
                     
                     Text("LIVE MIX TIMELINE:")
-                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                        .foregroundColor(.gray)
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundColor(.sbbTextSecondary)
                     
                     VStack(spacing: 6) {
-                        TimelineItemView(time: "00:00 - 00:25", title: "Lo-Fi Focus Beat (Intro Bed)", type: "MUSIC_BED", color: .blue)
-                        TimelineItemView(time: "00:25 - 01:05", title: "DJ Spoken Voice (AI Voice Automation)", type: "VOICE_TRACK", color: .yellow)
-                        TimelineItemView(time: "01:05 - 01:10", title: "W-SBB Radio Legal Station Ident", type: "STATION_IDENT", color: .purple)
+                        TimelineItemView(time: "00:00 - 00:25", title: "Lo-Fi Focus Beat (Intro Bed)", type: "MUSIC_BED", color: .sbbNeonCyan)
+                        TimelineItemView(time: "00:25 - 01:05", title: "DJ Spoken Voice (AI Automation)", type: "VOICE_TRACK", color: .sbbWarningAmber)
+                        TimelineItemView(time: "01:05 - 01:10", title: "W-SBB Radio Legal Station Ident", type: "STATION_IDENT", color: .sbbNeonMagenta)
                     }
                     
                     Spacer()
@@ -173,18 +181,20 @@ struct AIRadioDeskView: View {
                             Image(systemName: "music.note.list")
                             Text("Generate & Assemble Broadcast Hour")
                         }
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 12, weight: .bold))
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(Color.purple)
+                        .padding(.vertical, 9)
+                        .background(Color.sbbElectricBlue)
                         .foregroundColor(.white)
-                        .cornerRadius(6)
+                        .cornerRadius(3)
                     }
                     .buttonStyle(.plain)
                 }
+                .proCard(bg: .sbbSurface, border: .sbbBorder, radius: 3.0, padding: 16.0)
             }
-            .padding(20)
+            .padding(16)
         }
+        .background(Color.sbbBackground)
     }
     
     private func triggerRadioHour() {
@@ -212,11 +222,11 @@ struct TimelineItemView: View {
     var body: some View {
         HStack(spacing: 12) {
             Text(time)
-                .font(.system(size: 11, design: .monospaced))
-                .foregroundColor(.gray)
-                .frame(width: 90, alignment: .leading)
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundColor(.sbbTextMuted)
+                .frame(width: 85, alignment: .leading)
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 11, weight: .medium))
                 .foregroundColor(.white)
             Spacer()
             Text(type)
@@ -224,11 +234,13 @@ struct TimelineItemView: View {
                 .foregroundColor(color)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(color.opacity(0.15))
-                .cornerRadius(4)
+                .background(color.opacity(0.12))
+                .cornerRadius(2)
+                .overlay(RoundedRectangle(cornerRadius: 2).stroke(color.opacity(0.4), lineWidth: 1))
         }
         .padding(8)
-        .background(Color(red: 0.11, green: 0.13, blue: 0.18))
-        .cornerRadius(6)
+        .background(Color.sbbSurfaceElevated)
+        .cornerRadius(3)
+        .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.sbbBorder, lineWidth: 1))
     }
 }

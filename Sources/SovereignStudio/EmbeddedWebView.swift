@@ -5,6 +5,11 @@ struct EmbeddedWebView: NSViewRepresentable {
     let url: URL
     @Binding var reloadTrigger: Bool
 
+    init(url: URL, reloadTrigger: Binding<Bool> = .constant(false)) {
+        self.url = url
+        self._reloadTrigger = reloadTrigger
+    }
+
     func makeNSView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.setValue(true, forKey: "allowUniversalAccessFromFileURLs")

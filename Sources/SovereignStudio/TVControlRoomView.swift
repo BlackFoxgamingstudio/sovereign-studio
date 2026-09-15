@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 struct TVControlRoomView: View {
     @State private var selectedCamera = "CAM_01"
@@ -8,6 +9,9 @@ struct TVControlRoomView: View {
     @State private var isLiveOnAir = true
     @State private var useLiveStageView = true
     @State private var reloadStage = false
+    @State private var isUploadingAudio = false
+    @State private var uploadStatusMessage = ""
+    @State private var showUploadAlert = false
     @State private var currentProjectId = "proj-yt-ep01-599-mainframe"
     @State private var crawlText = "BREAKING: Sovereign Biz Box replaces commercial SaaS with zero cloud egress fees  ★  MARKETS: Privacy-First AI Automation up 34%  ★  ALL PIPELINES HEALTHY"
     
@@ -109,6 +113,26 @@ struct TVControlRoomView: View {
                     .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.sbbBorder, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
+
+                // Upload Audio / AIFF Track
+                Button(action: {
+                    selectAndUploadAudioTrack()
+                }) {
+                    HStack(spacing: 5) {
+                        Image(systemName: isUploadingAudio ? "arrow.triangle.2.circlepath" : "music.note.badge.plus")
+                            .font(.system(size: 11, weight: .bold))
+                        Text(isUploadingAudio ? "SYNCING..." : "ADD MUSIC (AIFF)")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    }
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 5)
+                    .background(Color.sbbNeonCyan)
+                    .cornerRadius(3)
+                }
+                .buttonStyle(.plain)
+                .disabled(isUploadingAudio)
+                .help("Select an uncompressed AIFF exported from Logic Pro to sync with the 15 Save the Cat beats")
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
@@ -340,5 +364,82 @@ struct TVControlRoomView: View {
                 self.reloadStage = true
             }
         }.resume()
+    }
+    
+    private func selectAndUploadAudioTrack() {
+        let panel = NSOpenPanel()
+        panel.title = "Select Logic Pro Soundtrack (AIFF, WAV, MP3)"
+        panel.prompt = "Sync to Show"
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = [
+            UTType(filenameExtension: "aif") ?? .audio,
+            UTType(filenameExtension: "aiff") ?? .audio,
+            UTType(filenameExtension: "aifc") ?? .audio,
+            .mp3,
+            .wav
+        ]
+        
+        if panel.runModal() == .OK, let fileURL = panel.url {
+            uploadAudioFile(fileURL: fileURL)
+        }
+    }
+    
+    private func uploadAudioFile(fileURL: URL) {
+        isUploadingAudio = true
+        uploadStatusMessage = "Syncing \(fileURL.lastPathComponent)..."
+        
+        let boundary = "Boundary-\(UUID().uuidString)"
+        guard let url = URL(string: "http://127.0.0.1:8815/api/projects/\(currentProjectId)/audio") else {
+            isUploadingAudio = false
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let fileData = try Data(contentsOf: fileURL)
+                var body = Data()
+                
+                // File field
+                body.append("--\(boundary)\r\n".data(using: .utf8)!)
+                body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(fileURL.lastPathComponent)\"\r\n".data(using: .utf8)!)
+                body.append("Content-Type: application/octet-stream\r\n\r\n".data(using: .utf8)!)
+                body.append(fileData)
+                body.append("\r\n".data(using: .utf8)!)
+                
+                // auto_deploy field
+                body.append("--\(boundary)\r\n".data(using: .utf8)!)
+                body.append("Content-Disposition: form-data; name=\"auto_deploy\"\r\n\r\n".data(using: .utf8)!)
+                body.append("true\r\n".data(using: .utf8)!)
+                
+                body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+                request.httpBody = body
+                
+                URLSession.shared.dataTask(with: request) { data, response, error in
+                    DispatchQueue.main.async {
+                        self.isUploadingAudio = false
+                        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                            self.uploadStatusMessage = "✅ Successfully synced \(fileURL.lastPathComponent) to 15 Save the Cat beats!"
+                            self.showUploadAlert = true
+                            self.reloadStage.toggle()
+                        } else {
+                            self.uploadStatusMessage = "❌ Sync failed: \(error?.localizedDescription ?? "Server error")"
+                            self.showUploadAlert = true
+                        }
+                    }
+                }.resume()
+            } catch {
+                DispatchQueue.main.async {
+                    self.isUploadingAudio = false
+                    self.uploadStatusMessage = "Could not read file: \(error.localizedDescription)"
+                    self.showUploadAlert = true
+                }
+            }
+        }
     }
 }

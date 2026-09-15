@@ -26,6 +26,16 @@ else
     echo "n8n Command Center already running on port 5678."
 fi
 
+# 3. Check/Start Storyboard AI Backend on Port 8815
+if ! lsof -i :8815 > /dev/null 2>&1; then
+    echo "Starting Storyboard AI Backend on port 8815..."
+    STORYBOARD_DIR="/Users/russellpowers/Library/Mobile Documents/com~apple~CloudDocs/codingprojects/workingstoryboardai/backend"
+    python3 -m uvicorn main:app --host 127.0.0.1 --port 8815 --app-dir "$STORYBOARD_DIR" > /dev/null 2>&1 &
+    sleep 2
+else
+    echo "Storyboard AI Backend already running on port 8815."
+fi
+
 # 2. Build Release binary if not built
 if [ ! -f "$DIR/.build/release/SovereignStudio" ]; then
     echo "Building Sovereign Studio release binary..."

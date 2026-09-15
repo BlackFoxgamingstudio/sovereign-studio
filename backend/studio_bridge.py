@@ -18,7 +18,9 @@ PORT = 8820
 WORKSPACE_ROOT = Path("/Users/russellpowers/Sovereign Biz Box")
 SOLUTIONS_DIR = WORKSPACE_ROOT / "solutions"
 N8N_DIR = WORKSPACE_ROOT / "sbb-n8n-command-center"
-N8N_SQLITE_PATH = N8N_DIR / ".n8n" / "database.sqlite"
+_p1 = N8N_DIR / ".n8n" / ".n8n" / "database.sqlite"
+_p2 = N8N_DIR / ".n8n" / "database.sqlite"
+N8N_SQLITE_PATH = _p1 if _p1.exists() else _p2
 SHARED_SECRET = os.environ.get("SBB_SHARED_SECRET", "sbb_local_dev_secret_2026")
 
 

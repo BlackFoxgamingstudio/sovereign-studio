@@ -115,7 +115,7 @@ struct ContentView: View {
             case .storyboard:
                 VStack(spacing: 0) {
                     HStack {
-                        Text("Storyboard AI Studio — Gemini 2.5 Flash")
+                        Text("Storyboard AI Studio — Gemini 3.6 Flash & Multi-Tier Visuals")
                             .font(.headline)
                         Spacer()
                         Button(action: { reloadStoryboard = true }) {

@@ -502,7 +502,7 @@ struct TVControlRoomView: View {
     
     private func renderAndExportVideo() {
         isRenderingVideo = true
-        uploadStatusMessage = "🎬 Rendering 1080p YouTube Master Video with FFmpeg & Logic Pro Audio..."
+        uploadStatusMessage = "🎬 Rendering 1080p Master Video with Broadcast HUD & Logic Pro Audio..."
         showUploadAlert = true
         
         guard let url = URL(string: "http://127.0.0.1:8812/api/v1/broadcast/render-video?project_id=\(currentProjectId)") else {
@@ -512,23 +512,47 @@ struct TVControlRoomView: View {
         
         URLSession.shared.dataTask(with: url) { data, response, error in
             DispatchQueue.main.async {
-                self.isRenderingVideo = false
                 guard let data = data,
                       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                       let status = json["status"] as? String, status == "SUCCESS",
                       let filename = json["filename"] as? String else {
+                    self.isRenderingVideo = false
                     self.uploadStatusMessage = "❌ Video render failed: \(error?.localizedDescription ?? "Encoding error")"
                     self.showUploadAlert = true
                     return
                 }
                 
-                let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first?.appendingPathComponent(filename)
-                self.uploadStatusMessage = "✅ 1080p YouTube Video Ready! Saved to ~/Downloads/\(filename)"
-                self.showUploadAlert = true
-                
-                if let targetURL = downloadsURL, FileManager.default.fileExists(atPath: targetURL.path) {
-                    NSWorkspace.shared.activateFileViewerSelecting([targetURL])
+                self.uploadStatusMessage = "📥 Downloading 1080p Master Video to ~/Downloads/\(filename)..."
+                let dlPath = json["download_url"] as? String ?? "/api/v1/broadcast/download-video/\(self.currentProjectId)"
+                guard let dlURL = URL(string: "http://127.0.0.1:8812\(dlPath)") else {
+                    self.isRenderingVideo = false
+                    return
                 }
+                
+                URLSession.shared.downloadTask(with: dlURL) { tempURL, response, dlError in
+                    DispatchQueue.main.async {
+                        self.isRenderingVideo = false
+                        guard let tempURL = tempURL, dlError == nil else {
+                            self.uploadStatusMessage = "❌ Video download failed: \(dlError?.localizedDescription ?? "Network error")"
+                            self.showUploadAlert = true
+                            return
+                        }
+                        
+                        let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first?.appendingPathComponent(filename)
+                        if let targetURL = downloadsURL {
+                            try? FileManager.default.removeItem(at: targetURL)
+                            do {
+                                try FileManager.default.moveItem(at: tempURL, to: targetURL)
+                                self.uploadStatusMessage = "✅ Finished 1080p Master Video with UI & Logic Pro Audio Saved to ~/Downloads/\(filename)"
+                                self.showUploadAlert = true
+                                NSWorkspace.shared.activateFileViewerSelecting([targetURL])
+                            } catch {
+                                self.uploadStatusMessage = "❌ Failed to save video to Downloads: \(error.localizedDescription)"
+                                self.showUploadAlert = true
+                            }
+                        }
+                    }
+                }.resume()
             }
         }.resume()
     }

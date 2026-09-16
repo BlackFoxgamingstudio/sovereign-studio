@@ -39,8 +39,8 @@ struct ContentView: View {
     @State private var reloadStoryboard = false
     @State private var isLiveSimulcast = true
     
-    let n8nURL = URL(string: "http://localhost:5678")!
-    let storyboardURL = URL(string: "http://localhost:8815")!
+    let n8nURL = URL(string: "http://127.0.0.1:5678")!
+    let storyboardURL = URL(string: "http://127.0.0.1:8815")!
     
     var body: some View {
         HStack(spacing: 0) {
@@ -224,7 +224,7 @@ struct ContentView: View {
                         Image(systemName: "key.fill")
                             .font(.system(size: 10))
                             .foregroundColor(.sbbNeonCyan)
-                        Text("Gemini 3.6 Flash ✓ | FLUX.1")
+                        Text("Gemini 3.6 Flash ✓ | OpenAI gpt-image-1")
                             .font(.system(size: 10, weight: .medium, design: .monospaced))
                             .foregroundColor(.white)
                     }

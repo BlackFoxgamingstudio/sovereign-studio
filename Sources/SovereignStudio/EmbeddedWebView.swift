@@ -24,14 +24,14 @@ struct EmbeddedWebView: NSViewRepresentable {
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         
-        let request = URLRequest(url: url)
+        let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30.0)
         webView.load(request)
         return webView
     }
 
     func updateNSView(_ nsView: WKWebView, context: Context) {
         if reloadTrigger {
-            nsView.reload()
+            nsView.reloadFromOrigin()
             DispatchQueue.main.async {
                 reloadTrigger = false
             }

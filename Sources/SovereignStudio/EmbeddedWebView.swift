@@ -31,10 +31,18 @@ struct EmbeddedWebView: NSViewRepresentable {
 
     func updateNSView(_ nsView: WKWebView, context: Context) {
         if reloadTrigger {
-            nsView.reloadFromOrigin()
+            let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30.0)
+            nsView.load(request)
             DispatchQueue.main.async {
                 reloadTrigger = false
             }
+            return
+        }
+        
+        // If the URL has changed, navigate to the new URL immediately
+        if let currentURL = nsView.url, currentURL != url {
+            let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30.0)
+            nsView.load(request)
         }
     }
 

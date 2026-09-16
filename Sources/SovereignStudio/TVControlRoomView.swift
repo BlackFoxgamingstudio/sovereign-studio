@@ -10,6 +10,7 @@ struct TVControlRoomView: View {
     @State private var useLiveStageView = true
     @State private var reloadStage = false
     @State private var isUploadingAudio = false
+    @State private var isRenderingVideo = false
     @State private var uploadStatusMessage = ""
     @State private var showUploadAlert = false
     @State private var currentProjectId = "proj-yt-ep01-599-mainframe"
@@ -133,6 +134,26 @@ struct TVControlRoomView: View {
                 .buttonStyle(.plain)
                 .disabled(isUploadingAudio)
                 .help("Select an uncompressed AIFF exported from Logic Pro to sync with the 15 Save the Cat beats")
+
+                // Export Video for YouTube
+                Button(action: {
+                    renderAndExportVideo()
+                }) {
+                    HStack(spacing: 5) {
+                        Image(systemName: isRenderingVideo ? "arrow.triangle.2.circlepath" : "arrow.down.to.line.circle.fill")
+                            .font(.system(size: 11, weight: .bold))
+                        Text(isRenderingVideo ? "RENDERING..." : "EXPORT YOUTUBE (MP4)")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 5)
+                    .background(Color.sbbCrimsonLive)
+                    .cornerRadius(3)
+                }
+                .buttonStyle(.plain)
+                .disabled(isRenderingVideo)
+                .help("Compile 16:9 1080p video with H.264 video, AAC audio, and Save the Cat! pacing for YouTube upload")
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
@@ -441,5 +462,38 @@ struct TVControlRoomView: View {
                 }
             }
         }
+    }
+    
+    private func renderAndExportVideo() {
+        isRenderingVideo = true
+        uploadStatusMessage = "🎬 Rendering 1080p YouTube Master Video with FFmpeg & Logic Pro Audio..."
+        showUploadAlert = true
+        
+        guard let url = URL(string: "http://127.0.0.1:8812/api/v1/broadcast/render-video?project_id=\(currentProjectId)") else {
+            isRenderingVideo = false
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                self.isRenderingVideo = false
+                guard let data = data,
+                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let status = json["status"] as? String, status == "SUCCESS",
+                      let filename = json["filename"] as? String else {
+                    self.uploadStatusMessage = "❌ Video render failed: \(error?.localizedDescription ?? "Encoding error")"
+                    self.showUploadAlert = true
+                    return
+                }
+                
+                let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first?.appendingPathComponent(filename)
+                self.uploadStatusMessage = "✅ 1080p YouTube Video Ready! Saved to ~/Downloads/\(filename)"
+                self.showUploadAlert = true
+                
+                if let targetURL = downloadsURL, FileManager.default.fileExists(atPath: targetURL.path) {
+                    NSWorkspace.shared.activateFileViewerSelecting([targetURL])
+                }
+            }
+        }.resume()
     }
 }

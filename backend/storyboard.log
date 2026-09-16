@@ -1,0 +1,7 @@
+INFO:     Started server process [68935]
+INFO:     Waiting for application startup.
+INFO:     Startup: ensuring static dirs & initializing SQLite…
+INFO:     SQLite ready at /Users/russellpowers/Library/Mobile Documents/com~apple~CloudDocs/codingprojects/workingstoryboardai/backend/database/sqlite.db
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8815 (Press CTRL+C to quit)
+INFO:     127.0.0.1:61652 - "GET / HTTP/1.1" 200 OK
